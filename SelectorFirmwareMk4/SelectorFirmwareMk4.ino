@@ -41,7 +41,7 @@ Single Button Press Commands (count pulses of selector)
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
-
+#define USE_SERIAL 0 // 0 = no serial output, 1 = serial output
 /**
  * Made with Marlin Bitmap Converter
  * https://marlinfw.org/tools/u8glib/converter.html
@@ -132,7 +132,7 @@ const byte SX1509_ADDRESS = 0x3E; // SX1509 I2C address
 #define SX1509_OUTPUT 4
 SX1509 io;                        // Create an SX1509 object to be used throughout
 
-
+#if 0
 // defines pins numbers - 3D Chameleon Board
 #define extEnable 0
 #define extStep 1
@@ -145,6 +145,34 @@ SX1509 io;                        // Create an SX1509 object to be used througho
 #define trigger A3
 #define s_limit A4
 #define filament A5
+#elif defined(ARDUINO_AVR_UNO)
+// Arduino Uno -- see https://www.instructables.com/Fix-Cloned-Arduino-NANO-CNC-Shield/#:~:text=Lines%2047%2C48%20%26%2049-,need%20replacing%20with,-%3A
+#define extEnable 8
+#define extStep 2
+#define extDir 5
+
+#define selEnable 8
+#define selStep 3
+#define selDir 6
+
+#define trigger A3
+#define s_limit A4
+#define filament A5
+#elif defined(ARDUINO_AVR_NANO)
+// Nano CNC Shield, HW-702 v0.0.0 - ensure follow guide above to correct microstepping pcb traces!
+#define extEnable 8
+#define extStep 5
+#define extDir 2
+
+#define selEnable 8
+#define selStep 6
+#define selDir 3
+
+#define trigger A3
+#define s_limit A4
+#define filament A5
+#endif
+
 
 const int counterclockwise = HIGH;
 const int clockwise = !counterclockwise;
@@ -196,6 +224,11 @@ long randomNumber = 0;
 
 void setup()
 {
+  if (USE_SERIAL) {
+    Serial.begin(115200);
+    delay(500);
+    Serial.println("Serial Enabled");
+  }
 
   Wire.begin(); //start i2C  
 	Wire.setClock(400000L); //set clock
@@ -209,6 +242,10 @@ void setup()
     io.pinMode(SX1509_FILAMENT_3, INPUT_PULLUP);
     io.pinMode(SX1509_OUTPUT, OUTPUT);
     ioEnabled = true;
+  }
+  if (USE_SERIAL) {
+    Serial.print("IO Expander: ");
+    Serial.println(ioEnabled);
   }
 
   // enable OLED display
@@ -273,6 +310,9 @@ void loop()
   // process button press
   if (digitalRead(trigger) == 0)
   {
+    if (USE_SERIAL) {
+      Serial.println("Button Depressed");
+    }
     idleCount = 0;
     logoActive = false;
     unsigned long nextPulse;
@@ -289,6 +329,9 @@ void loop()
         if(pulseCount>1) vibrateMotor();
       }
       delay(400);  // each pulse is 400+ milliseconds apart 
+    }
+    if (USE_SERIAL) {
+      Serial.println("Button Released");
     }
     processCommand(pulseCount); // ok... execute whatever command was caught (by pulse count)
     pulseCount = 0;
@@ -479,7 +522,11 @@ void processCommand(long commandCount)
 // just the routine to update the OLED
 void displayText(int offset, String str)
 {
-
+  if (USE_SERIAL) {
+    Serial.print(offset);
+    Serial.print(": ");
+    Serial.println(str);
+  } 
   //if(displayEnabled){
     oled.clear();
     oled.println("");
