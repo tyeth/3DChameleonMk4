@@ -42,6 +42,7 @@ Single Button Press Commands (count pulses of selector)
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define USE_SERIAL 0 // 0 = no serial output, 1 = serial output
+#define SERVO_MAX_ANGLE 180
 /**
  * Made with Marlin Bitmap Converter
  * https://marlinfw.org/tools/u8glib/converter.html
@@ -150,7 +151,7 @@ SX1509 io;                        // Create an SX1509 object to be used througho
 
 
 #elif defined(ARDUINO_AVR_UNO)
-// Arduino Uno -- see https://www.instructables.com/Fix-Cloned-Arduino-NANO-CNC-Shield/#:~:text=Lines%2047%2C48%20%26%2049-,need%20replacing%20with,-%3A
+// Arduino Uno -- CNC Shield V3?
 
 #define extEnable 8
 #define extStep 2
@@ -167,7 +168,8 @@ SX1509 io;                        // Create an SX1509 object to be used througho
 
 
 #elif defined(ARDUINO_AVR_NANO)
-// Nano CNC Shield, HW-702 v0.0.0 - ensure follow guide above to correct microstepping pcb traces!
+// Nano CNC Shield (aka CNC Shield V4), HW-702 v0.0.0 - ensure follow guide below to correct microstepping pcb traces if needed!
+// see https://www.instructables.com/Fix-Cloned-Arduino-NANO-CNC-Shield/#:~:text=Lines%2047%2C48%20%26%2049-,need%20replacing%20with,-%3A
 
 #define extEnable 8
 #define extStep 5
@@ -177,12 +179,17 @@ SX1509 io;                        // Create an SX1509 object to be used througho
 #define selStep 6
 #define selDir 3
 
-#define trigger A3
-#define s_limit A4
-#define filament A5
-#define filamentCutterPin A7
+#define trigger A3           // pcb labelled Coolant ENable
+#define s_limit A2           // pcb labelled Resume
+#define filament A1          // pcb labelled Hold
+#define filamentCutterPin 11 // pcb labelled Z+/- endstop
 
 #endif
+
+
+#define SERVO_START_ANGLE_AS_180_SERVO 135 * (180 / SERVO_MAX_ANGLE)
+#define SERVO_END_ANGLE_AS_180_SERVO 180 * (180 / SERVO_MAX_ANGLE)
+
 
 
 const int counterclockwise = HIGH;
@@ -804,7 +811,7 @@ void disconnectGillotine()
 // cycle servo from 135 and 180
 void openGillotine()
 {
-    for (int pos = 135; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+    for (int pos = SERVO_START_ANGLE_AS_180_SERVO; pos <= SERVO_END_ANGLE_AS_180_SERVO; pos += 1) { // goes from 0 degrees to 180 degrees
     // in steps of 1 degree
     filamentCutter.write(pos);              // tell servo to go to position in variable 'pos'
     delayMicroseconds(25000);                       // waits 15ms for the servo to reach the position
@@ -816,7 +823,7 @@ void openGillotine()
 // reverse cycle servo from 180 back to 135
 void closeGillotine()
 {
-  for (int pos = 180; pos >= 135; pos -= 1) { // goes from 180 degrees to 0 degrees
+  for (int pos = SERVO_END_ANGLE_AS_180_SERVO; pos >= SERVO_START_ANGLE_AS_180_SERVO; pos -= 1) { // goes from 180 degrees to 0 degrees
     filamentCutter.write(pos);              // tell servo to go to position in variable 'pos'
     delayMicroseconds(25000);                       // waits 15ms for the servo to reach the position
   }
@@ -844,4 +851,3 @@ void vibrateMotor()
   rotateSelector(clockwise, 2 * 16);
   rotateSelector(!clockwise, 2 * 16);
 }
-
