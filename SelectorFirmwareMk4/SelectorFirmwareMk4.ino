@@ -134,6 +134,7 @@ SX1509 io;                        // Create an SX1509 object to be used througho
 
 #if 0
 // defines pins numbers - 3D Chameleon Board
+
 #define extEnable 0
 #define extStep 1
 #define extDir 2
@@ -145,8 +146,12 @@ SX1509 io;                        // Create an SX1509 object to be used througho
 #define trigger A3
 #define s_limit A4
 #define filament A5
+#define filamentCutterPin 11
+
+
 #elif defined(ARDUINO_AVR_UNO)
 // Arduino Uno -- see https://www.instructables.com/Fix-Cloned-Arduino-NANO-CNC-Shield/#:~:text=Lines%2047%2C48%20%26%2049-,need%20replacing%20with,-%3A
+
 #define extEnable 8
 #define extStep 2
 #define extDir 5
@@ -158,8 +163,12 @@ SX1509 io;                        // Create an SX1509 object to be used througho
 #define trigger A3
 #define s_limit A4
 #define filament A5
+#define filamentCutterPin 11
+
+
 #elif defined(ARDUINO_AVR_NANO)
 // Nano CNC Shield, HW-702 v0.0.0 - ensure follow guide above to correct microstepping pcb traces!
+
 #define extEnable 8
 #define extStep 5
 #define extDir 2
@@ -171,6 +180,8 @@ SX1509 io;                        // Create an SX1509 object to be used througho
 #define trigger A3
 #define s_limit A4
 #define filament A5
+#define filamentCutterPin A7
+
 #endif
 
 
@@ -781,7 +792,7 @@ void cutFilament() {
 // enable the servo
 void connectGillotine()
 {
-  filamentCutter.attach(11);
+  filamentCutter.attach(filamentCutterPin);
 }
 
 // disable the servo - so it doesn't chatter when not in use
