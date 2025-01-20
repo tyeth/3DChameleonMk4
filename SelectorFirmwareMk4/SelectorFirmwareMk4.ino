@@ -209,7 +209,7 @@ SX1509 io;                        // Create an SX1509 object to be used througho
 #endif
 
 // This defines servo sweep start and end values, scaled to servo max angle,
-// and attempts to use step direction (later on line 840 + 852).
+// and attempts to use step direction (later on line 841 + 857).
 // Change these values if desired, but probably not necessary unless reversed servo
 #define SERVO_START_ANGLE_AS_180_SERVO 135 * (180 / SERVO_MAX_ANGLE)
 #define SERVO_END_ANGLE_AS_180_SERVO 180 * (180 / SERVO_MAX_ANGLE)
@@ -838,7 +838,11 @@ void disconnectGillotine()
 // cycle servo from 135 and 180
 void openGillotine()
 {
+  #if SERVO_STEP = -1
+    for (int pos = SERVO_START_ANGLE_AS_180_SERVO; pos >= SERVO_END_ANGLE_AS_180_SERVO; pos += SERVO_STEP) {
+  #else
     for (int pos = SERVO_START_ANGLE_AS_180_SERVO; pos <= SERVO_END_ANGLE_AS_180_SERVO; pos += SERVO_STEP) { // goes from 0 degrees to 180 degrees
+  #endif
     // in steps of 1 degree
     filamentCutter.write(pos);              // tell servo to go to position in variable 'pos'
     delayMicroseconds(25000);                       // waits 15ms for the servo to reach the position
@@ -850,7 +854,11 @@ void openGillotine()
 // reverse cycle servo from 180 back to 135
 void closeGillotine()
 {
+#if SERVO_STEP = -1
+  for (int pos = SERVO_END_ANGLE_AS_180_SERVO; pos <= SERVO_START_ANGLE_AS_180_SERVO; pos -= SERVO_STEP) {
+#else
   for (int pos = SERVO_END_ANGLE_AS_180_SERVO; pos >= SERVO_START_ANGLE_AS_180_SERVO; pos -= SERVO_STEP) { // goes from 180 degrees to 0 degrees
+#endif
     filamentCutter.write(pos);              // tell servo to go to position in variable 'pos'
     delayMicroseconds(25000);                       // waits 15ms for the servo to reach the position
   }
