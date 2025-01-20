@@ -29,7 +29,14 @@ Single Button Press Commands (count pulses of selector)
 #7 - Home
 #8 - Next Filament
 #9 - Random Filament
- 
+
+Go and edit the top sections of this file to change options and to match your hardware configuration.
+There is a section for the screen and/or serial output, along with servo maximum angle on line 48.  
+The default pin assignment is for the 3D Chameleon Mk4.1 board, toggled on line 144.
+If you are using a different board, you will need to change the pin assignments to match your board.
+There are some defaults provided, but the various CNC shield clones have different issues + pinouts.
+The AutoClippy is setup on pin 11, if you have a different processor then adjust filamentCutterPin.
+It also assumes the servo is 180degress, otherwise adjust line 52 and look at lines 210-220, then test!
 */
 
 #include <SSD1306Ascii.h> //i2C OLED
@@ -133,7 +140,9 @@ const byte SX1509_ADDRESS = 0x3E; // SX1509 I2C address
 #define SX1509_OUTPUT 4
 SX1509 io;                        // Create an SX1509 object to be used throughout
 
-#if 0
+// This "#if 1" means setup pins for the 3d Chameleon PCB (official)
+// If you want to use a CNC Shield, change to "#if 0" and check below
+#if 1
 // defines pins numbers - 3D Chameleon Board
 
 #define extEnable 0
@@ -151,7 +160,18 @@ SX1509 io;                        // Create an SX1509 object to be used througho
 
 
 #elif defined(ARDUINO_AVR_UNO)
-// Arduino Uno -- CNC Shield V3?
+// Arduino Uno -- CNC Shield V3 - double-check your board's pinout
+// A4988 in base X (ext) 
+// A4988 in base Y (sel) 
+// X.STEP /DR (ext)
+// Y.STEP /DR (sel)
+// END STOPS Z+ (clippy)
+// CoolEn (trigger)
+// Resume (s_limit)
+// Hold (filament)
+// Alternate settings: (shared with screen, but can be used)
+// DA (s_limit) is A4
+// CL (filament) is A5
 
 #define extEnable 8
 #define extStep 2
@@ -162,8 +182,10 @@ SX1509 io;                        // Create an SX1509 object to be used througho
 #define selDir 6
 
 #define trigger A3
-#define s_limit A4
-#define filament A5
+// #define s_limit A4        // pcb labelled DA
+// #define filament A5       // pcb labelled CL
+#define s_limit A2           // pcb labelled Resume
+#define filament A1          // pcb labelled Hold
 #define filamentCutterPin 11
 
 
@@ -186,11 +208,16 @@ SX1509 io;                        // Create an SX1509 object to be used througho
 
 #endif
 
-
+// This defines servo sweep start and end values, scaled to servo max angle,
+// and attempts to use step direction (later on line 840 + 852).
+// Change these values if desired, but probably not necessary unless reversed servo
 #define SERVO_START_ANGLE_AS_180_SERVO 135 * (180 / SERVO_MAX_ANGLE)
 #define SERVO_END_ANGLE_AS_180_SERVO 180 * (180 / SERVO_MAX_ANGLE)
-
-
+#if SERVO_START_ANGLE_AS_180_SERVO > SERVO_END_ANGLE_AS_180_SERVO
+  #define SERVO_STEP = -1
+#else
+  #define SERVO_STEP = 1
+#endif
 
 const int counterclockwise = HIGH;
 const int clockwise = !counterclockwise;
@@ -811,7 +838,7 @@ void disconnectGillotine()
 // cycle servo from 135 and 180
 void openGillotine()
 {
-    for (int pos = SERVO_START_ANGLE_AS_180_SERVO; pos <= SERVO_END_ANGLE_AS_180_SERVO; pos += 1) { // goes from 0 degrees to 180 degrees
+    for (int pos = SERVO_START_ANGLE_AS_180_SERVO; pos <= SERVO_END_ANGLE_AS_180_SERVO; pos += SERVO_STEP) { // goes from 0 degrees to 180 degrees
     // in steps of 1 degree
     filamentCutter.write(pos);              // tell servo to go to position in variable 'pos'
     delayMicroseconds(25000);                       // waits 15ms for the servo to reach the position
@@ -823,7 +850,7 @@ void openGillotine()
 // reverse cycle servo from 180 back to 135
 void closeGillotine()
 {
-  for (int pos = SERVO_END_ANGLE_AS_180_SERVO; pos >= SERVO_START_ANGLE_AS_180_SERVO; pos -= 1) { // goes from 180 degrees to 0 degrees
+  for (int pos = SERVO_END_ANGLE_AS_180_SERVO; pos >= SERVO_START_ANGLE_AS_180_SERVO; pos -= SERVO_STEP) { // goes from 180 degrees to 0 degrees
     filamentCutter.write(pos);              // tell servo to go to position in variable 'pos'
     delayMicroseconds(25000);                       // waits 15ms for the servo to reach the position
   }
