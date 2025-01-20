@@ -31,12 +31,12 @@ Single Button Press Commands (count pulses of selector)
 #9 - Random Filament
 
 Go and edit the top sections of this file to change options and to match your hardware configuration.
-There is a section for the screen and/or serial output, along with servo maximum angle on line 48.  
-The default pin assignment is for the 3D Chameleon Mk4.1 board, toggled on line 144.
+There is a section for the screen and/or serial output, along with servo maximum angle on lines 49-52.  
+The default pin assignment is for the 3D Chameleon Mk4.1 board, toggled on line 143.
 If you are using a different board, you will need to change the pin assignments to match your board.
 There are some defaults provided, but the various CNC shield clones have different issues + pinouts.
 The AutoClippy is setup on pin 11, if you have a different processor then adjust filamentCutterPin.
-It also assumes the servo is 180degress, otherwise adjust line 52 and look at lines 210-220, then test!
+It also assumes the servo is 180degress, otherwise adjust line 52 and look at lines 211-220, then test!
 */
 
 #include <SSD1306Ascii.h> //i2C OLED
